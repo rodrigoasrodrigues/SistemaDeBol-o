@@ -409,32 +409,30 @@ def _import_games_from_data(data):
             if not home_name or not away_name or not dt_str:
                 continue
 
-            # Parse date/time – try common API formats
-            match_dt = None
-            for fmt in (
-                "%Y-%m-%dT%H:%M:%SZ",
-                "%Y-%m-%dT%H:%M:%S",
-                "%Y-%m-%d %H:%M:%S",
-                "%Y-%m-%dT%H:%M",
-            ):
-                try:
-                    # Strip trailing Z or timezone offset before parsing naively
-                    clean = dt_str.rstrip("Z").split("+")[0].split("-")[0] if "T" not in dt_str else dt_str.rstrip("Z").split("+")[0]
-                    match_dt = datetime.strptime(clean[:19], fmt[:19] if len(fmt) > 19 else fmt)
-                    break
-                except ValueError:
-                    continue
+            # Parse date/time – strip timezone info and try common formats
+            match_dt = _parse_datetime(dt_str)
             if match_dt is None:
                 continue
 
+            home_code = (
+                match.get("homeTeam", {}).get("tla")
+                or match.get("home_team", {}).get("code")
+                or home_name[:3].upper()
+            )
+            away_code = (
+                match.get("awayTeam", {}).get("tla")
+                or match.get("away_team", {}).get("code")
+                or away_name[:3].upper()
+            )
+
             home_team = Team.query.filter_by(name=home_name).first()
             if not home_team:
-                home_team = Team(name=home_name, country_code=home_name[:3].upper())
+                home_team = Team(name=home_name, country_code=home_code[:3])
                 db.session.add(home_team)
 
             away_team = Team.query.filter_by(name=away_name).first()
             if not away_team:
-                away_team = Team(name=away_name, country_code=away_name[:3].upper())
+                away_team = Team(name=away_name, country_code=away_code[:3])
                 db.session.add(away_team)
 
             db.session.flush()
@@ -478,3 +476,32 @@ def _populate_game_form_choices(form):
 
     stadiums = Stadium.query.order_by(Stadium.name.asc()).all()
     form.stadium_id.choices = [(0, "— Selecione —")] + [(s.id, s.name) for s in stadiums]
+
+
+def _parse_datetime(dt_str):
+    """Parse a datetime string from common API formats, returning a naive UTC datetime."""
+    if not dt_str:
+        return None
+    # Remove trailing Z and any timezone offset (+HH:MM or -HH:MM) to get naive string
+    naive = dt_str.strip()
+    if naive.endswith("Z"):
+        naive = naive[:-1]
+    # Remove timezone offset: find a +/- after the time part (after position 10)
+    for sep in ("+", "-"):
+        idx = naive.find(sep, 10)
+        if idx != -1:
+            naive = naive[:idx]
+            break
+    # Try each candidate format
+    for fmt in (
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%d",
+    ):
+        try:
+            return datetime.strptime(naive, fmt)
+        except ValueError:
+            continue
+    return None

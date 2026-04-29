@@ -26,11 +26,10 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            next_page = request.args.get("next")
-            if not _is_safe_url(next_page):
-                next_page = None
+            next_param = request.args.get("next")
+            safe_next = next_param if _is_safe_url(next_param) else None
             flash("Login realizado com sucesso!", "success")
-            return redirect(next_page or url_for("main.index"))
+            return redirect(safe_next or url_for("main.index"))
         flash("E-mail ou senha inválidos.", "danger")
     return render_template("auth/login.html", form=form)
 
