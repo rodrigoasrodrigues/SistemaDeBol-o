@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Admin – Resultado{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-check2-circle text-success"></i> Registrar Resultado
+      </div>
+      <div class="card-body p-4">
+        <div class="text-center mb-4">
+          <h5 class="fw-bold">
+            {{ game.home_team.name }}
+            <span class="text-muted fw-normal">vs</span>
+            {{ game.away_team.name }}
+          </h5>
+          <div class="text-muted small">
+            {{ game.match_datetime.strftime('%d/%m/%Y %H:%M') }}
+          </div>
+        </div>
+
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="row g-3 align-items-center justify-content-center">
+            <div class="col-5">
+              {{ form.home_score.label(class="form-label text-center d-block") }}
+              {{ form.home_score(class="form-control form-control-lg text-center", min=0) }}
+            </div>
+            <div class="col-2 text-center pt-4">
+              <span class="fs-3 text-muted">×</span>
+            </div>
+            <div class="col-5">
+              {{ form.away_score.label(class="form-label text-center d-block") }}
+              {{ form.away_score(class="form-control form-control-lg text-center", min=0) }}
+            </div>
+          </div>
+          {% for error in form.home_score.errors + form.away_score.errors %}
+            <div class="text-danger small text-center mt-1">{{ error }}</div>
+          {% endfor %}
+
+          <div class="mt-4 d-flex gap-2 justify-content-center">
+            {{ form.submit(class="btn btn-success") }}
+            <a href="{{ url_for('admin.games') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

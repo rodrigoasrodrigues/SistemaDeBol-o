@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Admin – {{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-calendar2-plus text-primary"></i> {{ title }}
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.home_team_id.label(class="form-label") }}
+              {{ form.home_team_id(class="form-select" + (" is-invalid" if form.home_team_id.errors else "")) }}
+              {% for error in form.home_team_id.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.away_team_id.label(class="form-label") }}
+              {{ form.away_team_id(class="form-select" + (" is-invalid" if form.away_team_id.errors else "")) }}
+              {% for error in form.away_team_id.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              {{ form.match_datetime.label(class="form-label") }}
+              {{ form.match_datetime(class="form-control" + (" is-invalid" if form.match_datetime.errors else "")) }}
+              {% for error in form.match_datetime.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.stadium_id.label(class="form-label") }}
+              {{ form.stadium_id(class="form-select" + (" is-invalid" if form.stadium_id.errors else "")) }}
+            </div>
+
+            <div class="col-12">
+              {{ form.location.label(class="form-label") }}
+              {{ form.location(class="form-control", placeholder="Cidade, País (opcional se estádio selecionado)") }}
+            </div>
+
+            <div class="col-md-6">
+              {{ form.round_name.label(class="form-label") }}
+              {{ form.round_name(class="form-control", placeholder="ex: Fase de Grupos, Oitavas...") }}
+            </div>
+            <div class="col-md-6">
+              {{ form.group_name.label(class="form-label") }}
+              {{ form.group_name(class="form-control", placeholder="ex: Grupo A") }}
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            {{ form.submit(class="btn btn-primary") }}
+            <a href="{{ url_for('admin.games') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

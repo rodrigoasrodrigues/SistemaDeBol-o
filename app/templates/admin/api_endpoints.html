@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Admin – APIs{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0"><i class="bi bi-plug-fill text-info"></i> Endpoints de API</h2>
+  <a href="{{ url_for('admin.new_api_endpoint') }}" class="btn btn-primary">
+    <i class="bi bi-plus-lg"></i> Novo Endpoint
+  </a>
+</div>
+
+<p class="text-muted small">
+  Configure endpoints de APIs externas para importar jogos automaticamente.
+  Após cadastrar, clique em <strong>Importar</strong> para buscar os jogos da API.
+</p>
+
+{% if endpoints %}
+<div class="row g-3">
+  {% for ep in endpoints %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">{{ ep.name }}</span>
+        {% if ep.is_active %}
+          <span class="badge bg-success">Ativo</span>
+        {% else %}
+          <span class="badge bg-secondary">Inativo</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <p class="small text-break text-muted mb-1">
+          <i class="bi bi-link-45deg"></i> <code>{{ ep.url }}</code>
+        </p>
+        {% if ep.description %}
+          <p class="small text-muted mb-0">{{ ep.description }}</p>
+        {% endif %}
+        {% if ep.api_key_header %}
+          <p class="small text-muted mb-0">
+            <i class="bi bi-key-fill"></i> Header: <code>{{ ep.api_key_header }}</code>
+          </p>
+        {% endif %}
+      </div>
+      <div class="card-footer d-flex gap-2 flex-wrap">
+        {% if ep.is_active %}
+        <form method="POST" action="{{ url_for('admin.import_games_from_api', ep_id=ep.id) }}"
+              onsubmit="return confirm('Importar jogos deste endpoint?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-sm btn-success">
+            <i class="bi bi-cloud-download-fill"></i> Importar
+          </button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('admin.edit_api_endpoint', ep_id=ep.id) }}"
+           class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-pencil"></i> Editar
+        </a>
+        <form method="POST" action="{{ url_for('admin.delete_api_endpoint', ep_id=ep.id) }}"
+              class="ms-auto"
+              onsubmit="return confirm('Remover este endpoint?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-trash"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <i class="bi bi-plug display-3"></i>
+  <p class="mt-3">Nenhum endpoint cadastrado.</p>
+</div>
+{% endif %}
+{% endblock %}

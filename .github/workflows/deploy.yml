@@ -1,0 +1,144 @@
+name: Build and Deploy to AWS Lightsail
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  # Name of the Lightsail container service (set this in GitHub repo settings → Variables)
+  LIGHTSAIL_SERVICE_NAME: ${{ vars.LIGHTSAIL_SERVICE_NAME || 'sistema-bolao' }}
+  # Label used to tag the image inside the Lightsail registry
+  IMAGE_LABEL: app
+  # Container port exposed by the application
+  CONTAINER_PORT: 8000
+
+jobs:
+  build-and-deploy:
+    name: Build Docker image and deploy to Lightsail
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout source
+      # -----------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # 2. Configure AWS credentials
+      #
+      # Option A (recommended) – OIDC federated identity (no long-lived keys).
+      # Requires an IAM role with the GitHub OIDC provider trusted.
+      # Uncomment and set the LIGHTSAIL_DEPLOY_ROLE secret to use it:
+      #
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.LIGHTSAIL_DEPLOY_ROLE }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+      #
+      # Option B – Static IAM access keys (simpler, but less secure).
+      # -----------------------------------------------------------------------
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # -----------------------------------------------------------------------
+      # 3. Build Docker image
+      # -----------------------------------------------------------------------
+      - name: Build Docker image
+        run: |
+          docker build \
+            --tag sistema-bolao:${{ github.sha }} \
+            --tag sistema-bolao:latest \
+            .
+
+      # -----------------------------------------------------------------------
+      # 4. Push image to the Lightsail built-in container registry
+      #    `aws lightsail push-container-image` uploads the local image and
+      #    returns the Lightsail image reference (e.g. ":service/label.N").
+      # -----------------------------------------------------------------------
+      - name: Push image to Lightsail registry
+        id: push
+        run: |
+          output=$(aws lightsail push-container-image \
+            --service-name "$LIGHTSAIL_SERVICE_NAME" \
+            --label "$IMAGE_LABEL" \
+            --image "sistema-bolao:${{ github.sha }}")
+
+          echo "$output"
+
+          # Extract the Lightsail image reference: ":service/label.N"
+          image_ref=$(echo "$output" | grep -oP '(?<=Refer to this image as ").*(?=" in deployments)')
+          echo "image_ref=$image_ref" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # 5. Create a new container service deployment
+      # -----------------------------------------------------------------------
+      - name: Deploy to Lightsail
+        run: |
+          IMAGE_REF="${{ steps.push.outputs.image_ref }}"
+
+          aws lightsail create-container-service-deployment \
+            --service-name "$LIGHTSAIL_SERVICE_NAME" \
+            --containers "{
+              \"app\": {
+                \"image\": \"$IMAGE_REF\",
+                \"environment\": {
+                  \"FLASK_APP\": \"run.py\",
+                  \"FLASK_ENV\": \"production\",
+                  \"SECRET_KEY\": \"${{ secrets.SECRET_KEY }}\",
+                  \"DB_USER\": \"${{ secrets.DB_USER }}\",
+                  \"DB_PASSWORD\": \"${{ secrets.DB_PASSWORD }}\",
+                  \"DB_HOST\": \"${{ secrets.DB_HOST }}\",
+                  \"DB_PORT\": \"${{ secrets.DB_PORT || '3306' }}\",
+                  \"DB_NAME\": \"${{ secrets.DB_NAME }}\"
+                },
+                \"ports\": {
+                  \"$CONTAINER_PORT\": \"HTTP\"
+                }
+              }
+            }" \
+            --public-endpoint "{
+              \"containerName\": \"app\",
+              \"containerPort\": $CONTAINER_PORT,
+              \"healthCheck\": {
+                \"healthyThreshold\": 2,
+                \"unhealthyThreshold\": 2,
+                \"timeoutSeconds\": 5,
+                \"intervalSeconds\": 10,
+                \"path\": \"/\",
+                \"successCodes\": \"200-302\"
+              }
+            }"
+
+      # -----------------------------------------------------------------------
+      # 6. Wait for deployment to reach RUNNING state (up to ~10 minutes)
+      # -----------------------------------------------------------------------
+      - name: Wait for deployment to complete
+        run: |
+          echo "Waiting for Lightsail container service to reach RUNNING state..."
+          for i in $(seq 1 30); do
+            state=$(aws lightsail get-container-services \
+              --service-name "$LIGHTSAIL_SERVICE_NAME" \
+              --query "containerServices[0].state" \
+              --output text)
+            echo "  attempt $i/30 – state: $state"
+            if [ "$state" = "RUNNING" ]; then
+              echo "Deployment successful!"
+              exit 0
+            elif [ "$state" = "DISABLED" ] || [ "$state" = "DELETING" ]; then
+              echo "Service entered unexpected state: $state"
+              exit 1
+            fi
+            sleep 20
+          done
+          echo "Timed out waiting for deployment."
+          exit 1
