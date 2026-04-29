@@ -1,0 +1,66 @@
+/* =========================================================
+   Bolão Copa 2026 – Custom styles
+   ========================================================= */
+
+/* Smooth theme transitions */
+html[data-bs-theme],
+html[data-bs-theme] * {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Navbar */
+#main-navbar {
+  backdrop-filter: blur(8px);
+}
+[data-bs-theme="light"] #main-navbar {
+  background-color: rgba(255, 255, 255, 0.92);
+}
+[data-bs-theme="dark"] #main-navbar {
+  background-color: rgba(33, 37, 41, 0.92);
+}
+
+/* Cards */
+.card {
+  border-radius: 0.75rem;
+}
+[data-bs-theme="dark"] .card {
+  background-color: #1e2126;
+}
+
+/* Footer */
+.footer {
+  margin-top: 4rem;
+}
+
+/* Score badge */
+.badge.fs-5,
+.badge.fs-6 {
+  font-size: 0.95rem !important;
+  padding: 0.35em 0.65em;
+}
+
+/* Ranking – first place highlight animation */
+.list-group-item-warning {
+  animation: goldPulse 2.5s ease-in-out infinite;
+}
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+  50%       { box-shadow: 0 0 8px 3px rgba(255, 193, 7, 0.4); }
+}
+
+/* Progress bar text */
+.progress-bar {
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+/* Bet score inputs */
+input[type="number"].form-control {
+  -moz-appearance: textfield;
+}
+input[type="number"].form-control::-webkit-outer-spin-button,
+input[type="number"].form-control::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

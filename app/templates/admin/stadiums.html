@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Admin – Estádios{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0"><i class="bi bi-building text-warning"></i> Estádios</h2>
+  <a href="{{ url_for('admin.new_stadium') }}" class="btn btn-primary">
+    <i class="bi bi-plus-lg"></i> Novo Estádio
+  </a>
+</div>
+
+{% if stadiums %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Cidade</th>
+        <th>País</th>
+        <th class="text-center">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for stadium in stadiums %}
+      <tr>
+        <td class="fw-semibold">{{ stadium.name }}</td>
+        <td>{{ stadium.city }}</td>
+        <td>{{ stadium.country }}</td>
+        <td class="text-center">
+          <a href="{{ url_for('admin.edit_stadium', stadium_id=stadium.id) }}"
+             class="btn btn-sm btn-outline-primary me-1">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <form method="POST" action="{{ url_for('admin.delete_stadium', stadium_id=stadium.id) }}"
+                class="d-inline"
+                onsubmit="return confirm('Remover este estádio?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <i class="bi bi-building display-3"></i>
+  <p class="mt-3">Nenhum estádio cadastrado.</p>
+</div>
+{% endif %}
+{% endblock %}

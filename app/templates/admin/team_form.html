@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Admin – {{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-flag-fill text-success"></i> {{ title }}
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="Brasil") }}
+            {% for error in form.name.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.country_code.label(class="form-label") }}
+            {{ form.country_code(class="form-control" + (" is-invalid" if form.country_code.errors else ""), placeholder="BRA", maxlength=3, style="text-transform:uppercase") }}
+            {% for error in form.country_code.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.flag_url.label(class="form-label") }}
+            {{ form.flag_url(class="form-control", placeholder="https://...") }}
+            {% if form.flag_url.data %}
+              <img src="{{ form.flag_url.data }}" width="60" class="mt-2 border rounded-1" />
+            {% endif %}
+          </div>
+
+          <div class="d-flex gap-2">
+            {{ form.submit(class="btn btn-primary") }}
+            <a href="{{ url_for('admin.teams') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

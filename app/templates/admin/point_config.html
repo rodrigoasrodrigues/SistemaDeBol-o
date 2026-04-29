@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Admin – Pontuação{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-sliders text-danger"></i> Configuração de Pontuação
+      </div>
+      <div class="card-body p-4">
+        <p class="text-muted small mb-4">
+          Configure a pontuação que os apostadores recebem de acordo com o resultado da aposta.
+        </p>
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-4">
+            {{ form.correct_score_points.label(class="form-label fw-semibold") }}
+            <div class="input-group">
+              {{ form.correct_score_points(class="form-control form-control-lg" + (" is-invalid" if form.correct_score_points.errors else ""), min=0) }}
+              <span class="input-group-text">pts</span>
+            </div>
+            <div class="form-text">Apostador acertou o placar exato (ex: 2×1 quando o resultado foi 2×1).</div>
+            {% for error in form.correct_score_points.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-4">
+            {{ form.correct_winner_points.label(class="form-label fw-semibold") }}
+            <div class="input-group">
+              {{ form.correct_winner_points(class="form-control form-control-lg", min=0) }}
+              <span class="input-group-text">pts</span>
+            </div>
+            <div class="form-text">Apostador acertou o vencedor mas não o placar exato.</div>
+          </div>
+
+          <div class="mb-4">
+            {{ form.correct_draw_points.label(class="form-label fw-semibold") }}
+            <div class="input-group">
+              {{ form.correct_draw_points(class="form-control form-control-lg", min=0) }}
+              <span class="input-group-text">pts</span>
+            </div>
+            <div class="form-text">Apostador apostou em empate e o resultado foi empate (mas não o placar exato).</div>
+          </div>
+
+          {{ form.submit(class="btn btn-danger") }}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
