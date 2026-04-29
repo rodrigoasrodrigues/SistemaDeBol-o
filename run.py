@@ -5,6 +5,17 @@ from app.models import db, User, PointConfig
 app = create_app(os.environ.get("FLASK_ENV", "default"))
 
 
+@app.cli.command("init-db")
+def init_db():
+    """Create database tables and default settings."""
+    import click
+
+    with app.app_context():
+        db.create_all()
+        PointConfig.get_current()
+        click.echo("Database initialized successfully.")
+
+
 @app.cli.command("create-admin")
 def create_admin():
     """Create the default admin user."""

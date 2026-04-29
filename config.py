@@ -10,6 +10,7 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
+    AUTO_DB_BOOTSTRAP = False
 
     DB_USER = os.environ.get("DB_USER", "root")
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
@@ -25,16 +26,19 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = False
+    AUTO_DB_BOOTSTRAP = True
 
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     WTF_CSRF_ENABLED = False
+    AUTO_DB_BOOTSTRAP = False
 
 
 class ProductionConfig(Config):
     DEBUG = False
+    AUTO_DB_BOOTSTRAP = False
 
 
 config = {
