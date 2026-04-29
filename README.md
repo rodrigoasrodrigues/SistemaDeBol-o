@@ -72,6 +72,47 @@ flask run
 | `DB_PORT` | Porta do MySQL | `3306` |
 | `DB_NAME` | Nome do banco | `sistema_bolao` |
 
+## Deploy (AWS Lightsail via GitHub Actions)
+
+O workflow `.github/workflows/deploy.yml` é acionado automaticamente em todo push na branch `main` e realiza:
+
+1. Build da imagem Docker
+2. Push para o registry privado do Lightsail (`aws lightsail push-container-image`)
+3. Criação de um novo deployment no serviço de container do Lightsail
+4. Aguarda o serviço atingir o estado `RUNNING`
+
+### Pré-requisitos
+
+1. Crie um **Lightsail Container Service** na AWS (e.g. `sistema-bolao`).
+2. Adicione os seguintes **Secrets** no repositório (`Settings → Secrets and variables → Actions`):
+
+| Secret | Descrição |
+|---|---|
+| `AWS_ACCESS_KEY_ID` | ID da chave de acesso IAM (ou use OIDC, veja abaixo) |
+| `AWS_SECRET_ACCESS_KEY` | Chave secreta IAM (ou use OIDC, veja abaixo) |
+| `AWS_REGION` | Região AWS (ex.: `us-east-1`) |
+| `SECRET_KEY` | Chave secreta Flask |
+| `DB_USER` | Usuário do banco MySQL |
+| `DB_PASSWORD` | Senha do banco MySQL |
+| `DB_HOST` | Host do banco MySQL |
+| `DB_PORT` | Porta do banco (padrão `3306`) |
+| `DB_NAME` | Nome do banco |
+
+3. (Opcional) Defina a variável de repositório `LIGHTSAIL_SERVICE_NAME` com o nome do serviço. Se omitido, usa `sistema-bolao`.
+
+> **Recomendação de segurança:** prefira autenticação via OIDC em vez de chaves estáticas.  
+> Configure o provedor OIDC do GitHub na AWS (`https://token.actions.githubusercontent.com`),  
+> crie uma IAM Role com a política `AmazonLightsailFullAccess` e armazene o ARN da role no  
+> secret `LIGHTSAIL_DEPLOY_ROLE`. Depois, substitua o step de credenciais no workflow conforme  
+> o bloco comentado "Option A".
+
+### Build local da imagem
+
+```bash
+docker build -t sistema-bolao .
+docker run --env-file .env -p 8000:8000 sistema-bolao
+```
+
 ## Testes
 
 ```bash
