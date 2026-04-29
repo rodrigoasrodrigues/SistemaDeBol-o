@@ -51,7 +51,18 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       # -----------------------------------------------------------------------
-      # 3. Build Docker image
+      # 3. Install Lightsail Control plugin (required by push-container-image)
+      # -----------------------------------------------------------------------
+      - name: Install lightsailctl plugin
+        run: |
+          curl -fsSL \
+            "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" \
+            -o /usr/local/bin/lightsailctl
+          chmod +x /usr/local/bin/lightsailctl
+          lightsailctl --version
+
+      # -----------------------------------------------------------------------
+      # 4. Build Docker image
       # -----------------------------------------------------------------------
       - name: Build Docker image
         run: |
@@ -61,7 +72,7 @@ jobs:
             .
 
       # -----------------------------------------------------------------------
-      # 4. Push image to the Lightsail built-in container registry
+      # 5. Push image to the Lightsail built-in container registry
       #    `aws lightsail push-container-image` uploads the local image and
       #    returns the Lightsail image reference (e.g. ":service/label.N").
       # -----------------------------------------------------------------------
@@ -80,7 +91,7 @@ jobs:
           echo "image_ref=$image_ref" >> "$GITHUB_OUTPUT"
 
       # -----------------------------------------------------------------------
-      # 5. Create a new container service deployment
+      # 6. Create a new container service deployment
       # -----------------------------------------------------------------------
       - name: Deploy to Lightsail
         run: |
@@ -120,7 +131,7 @@ jobs:
             }"
 
       # -----------------------------------------------------------------------
-      # 6. Wait for deployment to reach RUNNING state (up to ~10 minutes)
+      # 7. Wait for deployment to reach RUNNING state (up to ~10 minutes)
       # -----------------------------------------------------------------------
       - name: Wait for deployment to complete
         run: |
