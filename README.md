@@ -50,18 +50,14 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edite .env com suas credenciais MySQL
 
-# 5. Crie o banco de dados
-flask db init
-flask db migrate -m "initial"
-flask db upgrade
-
-# 6. Crie o usuário admin
+# 5. Crie o usuário admin
+#    (as tabelas são criadas automaticamente na primeira execução)
 flask create-admin
 
-# 7. (Opcional) Popule com dados iniciais
+# 6. (Opcional) Popule com dados iniciais
 flask seed-db
 
-# 8. Inicie o servidor
+# 7. Inicie o servidor
 flask run
 ```
 

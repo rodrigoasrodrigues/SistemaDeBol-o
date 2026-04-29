@@ -42,4 +42,11 @@ def create_app(config_name=None):
     from .admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix="/admin")
 
+    # Automatically create all tables on first run (idempotent: safe on subsequent starts).
+    # Also ensures the default point configuration row exists.
+    with app.app_context():
+        db.create_all()
+        from .models import PointConfig
+        PointConfig.get_current()
+
     return app
