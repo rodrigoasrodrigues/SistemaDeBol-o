@@ -51,7 +51,7 @@ cp .env.example .env
 # Edite .env com suas credenciais MySQL
 
 # 5. Crie o usuário admin
-#    (as tabelas são criadas automaticamente na primeira execução)
+#    (as tabelas são criadas automaticamente na primeira execução no modo development)
 flask create-admin
 
 # 6. (Opcional) Popule com dados iniciais
@@ -71,6 +71,11 @@ flask run
 | `DB_HOST` | Host do MySQL | `localhost` |
 | `DB_PORT` | Porta do MySQL | `3306` |
 | `DB_NAME` | Nome do banco | `sistema_bolao` |
+| `DEFAULT_ADMIN_USERNAME` | Usuário admin criado automaticamente se não existir | `admin` |
+| `DEFAULT_ADMIN_EMAIL` | E-mail admin criado automaticamente se não existir | `admin@bolao.local` |
+| `DEFAULT_ADMIN_PASSWORD` | Senha admin criada automaticamente se não existir | `admin123` |
+
+O app também tenta criar automaticamente esse admin padrão ao subir, **somente se a tabela `users` já existir** e não houver usuário com o e-mail configurado.
 
 ## Deploy (AWS Lightsail via GitHub Actions)
 
